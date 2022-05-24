@@ -33,7 +33,7 @@ func NewPSCommand(cmds []string, opts CreatePSCommandOpts) *PSCommand {
 	if opts.InvokeCommand && opts.PassCredentials {
 		invokeCmds := []string{"Invoke-Command -Authentication Kerberos"}
 		if opts.JSONOutput {
-			cmds = append(cmds, "| ConvertTo-Json")
+			cmds = append(cmds, "| ConvertTo-Json -Depth 10")
 		}
 
 		invokeCmds = append(invokeCmds, fmt.Sprintf("-ScriptBlock {%s}", strings.Join(cmds, " ")))
@@ -63,7 +63,7 @@ func NewPSCommand(cmds []string, opts CreatePSCommandOpts) *PSCommand {
 	}
 
 	if !opts.InvokeCommand && opts.JSONOutput {
-		cmds = append(cmds, "| ConvertTo-Json")
+		cmds = append(cmds, "| ConvertTo-Json -Depth 10")
 	}
 
 	cmd := strings.Join(cmds, " ")
