@@ -112,11 +112,12 @@ func Provider() *schema.Provider {
 			},
 		},
 		DataSourcesMap: map[string]*schema.Resource{
-			"ad_user":     dataSourceADUser(),
-			"ad_group":    dataSourceADGroup(),
-			"ad_gpo":      dataSourceADGPO(),
-			"ad_computer": dataSourceADComputer(),
-			"ad_ou":       dataSourceADOU(),
+			"ad_user":      dataSourceADUser(),
+			"ad_group":     dataSourceADGroup(),
+			"ad_gpo":       dataSourceADGPO(),
+			"ad_computer":  dataSourceADComputer(),
+			"ad_ou":        dataSourceADOU(),
+			"ad_dhcplease": dataSourceDHCPLease(),
 		},
 		ResourcesMap: map[string]*schema.Resource{
 			"ad_user":             resourceADUser(),
@@ -128,6 +129,7 @@ func Provider() *schema.Provider {
 			"ad_ou":               resourceADOU(),
 			"ad_gplink":           resourceADGPLink(),
 			"ad_dnsrecord":        resourceDNSRecord(),
+			"ad_dhcpreservation":  resourceDHCPReservation(),
 		},
 		ConfigureFunc: initProviderConfig,
 	}
