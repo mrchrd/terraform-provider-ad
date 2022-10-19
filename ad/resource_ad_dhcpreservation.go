@@ -23,19 +23,19 @@ func resourceDHCPReservation() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"client_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				Description:  "MAC address of the client.",
+				Type:        schema.TypeString,
+				Required:    true,
+				Description: "MAC address of the client.",
 			},
 			"description": {
 				Type:        schema.TypeString,
-				Optional:     true,
+				Optional:    true,
 				Description: "Description for the reservation.",
 			},
 			"ipv4_address": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The IPv4 address.",
+				Type:         schema.TypeString,
+				Required:     true,
+				Description:  "The IPv4 address.",
 				ValidateFunc: validation.IsIPv4Address,
 			},
 			"name": {
@@ -44,10 +44,10 @@ func resourceDHCPReservation() *schema.Resource {
 				Description: "The name of the record.",
 			},
 			"scope_id": {
-				Type:        schema.TypeString,
-				Required:    true,
+				Type:         schema.TypeString,
+				Required:     true,
 				ValidateFunc: validation.IsIPv4Address,
-				Description: "The DHCP scope.",
+				Description:  "The DHCP scope.",
 			},
 			"type": {
 				Type:         schema.TypeString,

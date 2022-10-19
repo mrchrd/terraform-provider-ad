@@ -19,18 +19,18 @@ type CIProperty struct {
 
 // DNS Record
 type DNSRecord struct {
-	DistinguishedName     string                `json:"DistinguishedName"`
-	IPv4Address           string
-	Name                  string                `json:"HostName"`
-	Data                  struct {
-		CimInstanceProperties []CIProperty  `json:"CimInstanceProperties"`
-	}                                           `json:"RecordData"`
-	Type                  string                `json:"RecordType"`
-	TimeToLive            struct {
-		TotalSeconds  float64               `json:"TotalSeconds"`
-	}                                           `json:"TimeToLive"`
-	TTL                   int
-	ZoneName              string
+	DistinguishedName string `json:"DistinguishedName"`
+	IPv4Address       string
+	Name              string `json:"HostName"`
+	Data              struct {
+		CimInstanceProperties []CIProperty `json:"CimInstanceProperties"`
+	} `json:"RecordData"`
+	Type       string `json:"RecordType"`
+	TimeToLive struct {
+		TotalSeconds float64 `json:"TotalSeconds"`
+	} `json:"TimeToLive"`
+	TTL      int
+	ZoneName string
 }
 
 // AddDNSRecord creates a new DNS Record
@@ -39,8 +39,8 @@ func (r *DNSRecord) AddDNSRecord(conf *config.ProviderConf) (string, error) {
 	cmds := []string{fmt.Sprintf("Add-DnsServerResourceRecord -AllowUpdateAny -ZoneName %q -Name %q", r.ZoneName, r.Name)}
 
 	switch r.Type {
-		case "A":
-			cmds = append(cmds, fmt.Sprintf("-A -IPv4Address %q", r.IPv4Address))
+	case "A":
+		cmds = append(cmds, fmt.Sprintf("-A -IPv4Address %q", r.IPv4Address))
 	}
 
 	if r.TTL >= 0 {
@@ -83,93 +83,93 @@ func (r *DNSRecord) AddDNSRecord(conf *config.ProviderConf) (string, error) {
 
 // ModifyDNSRecord updates an existing DNS Record
 func (r *DNSRecord) ModifyDNSRecord(d *schema.ResourceData, conf *config.ProviderConf) error {
-/*
-	KeyMap := map[string]string{
-		"sam_account_name": "SamAccountName",
-		"scope":            "GroupScope",
-		"category":         "GroupCategory",
-		"description":      "Description",
-	}
+	/*
+		KeyMap := map[string]string{
+			"sam_account_name": "SamAccountName",
+			"scope":            "GroupScope",
+			"category":         "GroupCategory",
+			"description":      "Description",
+		}
 
-	cmds := []string{fmt.Sprintf("Set-ADGroup -Identity %q", g.GUID)}
+		cmds := []string{fmt.Sprintf("Set-ADGroup -Identity %q", g.GUID)}
 
-	for k, param := range KeyMap {
-		if d.HasChange(k) {
-			value := SanitiseTFInput(d, k)
-			if value == "" {
-				value = "$null"
-			} else {
-				value = fmt.Sprintf(`"%s"`, value)
+		for k, param := range KeyMap {
+			if d.HasChange(k) {
+				value := SanitiseTFInput(d, k)
+				if value == "" {
+					value = "$null"
+				} else {
+					value = fmt.Sprintf(`"%s"`, value)
+				}
+				cmds = append(cmds, fmt.Sprintf(`-%s %s`, param, value))
 			}
-			cmds = append(cmds, fmt.Sprintf(`-%s %s`, param, value))
 		}
-	}
 
-	if len(cmds) > 1 {
-		psOpts := CreatePSCommandOpts{
-			JSONOutput:      true,
-			ForceArray:      false,
-			ExecLocally:     conf.IsConnectionTypeLocal(),
-			PassCredentials: conf.IsPassCredentialsEnabled(),
-			Username:        conf.Settings.WinRMUsername,
-			Password:        conf.Settings.WinRMPassword,
-			Server:          conf.IdentifyDomainController(),
+		if len(cmds) > 1 {
+			psOpts := CreatePSCommandOpts{
+				JSONOutput:      true,
+				ForceArray:      false,
+				ExecLocally:     conf.IsConnectionTypeLocal(),
+				PassCredentials: conf.IsPassCredentialsEnabled(),
+				Username:        conf.Settings.WinRMUsername,
+				Password:        conf.Settings.WinRMPassword,
+				Server:          conf.IdentifyDomainController(),
+			}
+			psCmd := NewPSCommand(cmds, psOpts)
+			result, err := psCmd.Run(conf)
+			if err != nil {
+				return err
+			}
+			if result.ExitCode != 0 {
+				log.Printf("[DEBUG] stderr: %s\nstdout: %s", result.StdErr, result.Stdout)
+				return fmt.Errorf("command Set-ADGroup exited with a non-zero exit code %d, stderr: %s", result.ExitCode, result.StdErr)
+			}
 		}
-		psCmd := NewPSCommand(cmds, psOpts)
-		result, err := psCmd.Run(conf)
-		if err != nil {
-			return err
-		}
-		if result.ExitCode != 0 {
-			log.Printf("[DEBUG] stderr: %s\nstdout: %s", result.StdErr, result.Stdout)
-			return fmt.Errorf("command Set-ADGroup exited with a non-zero exit code %d, stderr: %s", result.ExitCode, result.StdErr)
-		}
-	}
 
-	if d.HasChange("name") {
-		cmd := fmt.Sprintf("Rename-ADObject -Identity %q -NewName %q", g.GUID, d.Get("name").(string))
-		psOpts := CreatePSCommandOpts{
-			JSONOutput:      true,
-			ForceArray:      false,
-			ExecLocally:     conf.IsConnectionTypeLocal(),
-			PassCredentials: conf.IsPassCredentialsEnabled(),
-			Username:        conf.Settings.WinRMUsername,
-			Password:        conf.Settings.WinRMPassword,
-			Server:          conf.IdentifyDomainController(),
+		if d.HasChange("name") {
+			cmd := fmt.Sprintf("Rename-ADObject -Identity %q -NewName %q", g.GUID, d.Get("name").(string))
+			psOpts := CreatePSCommandOpts{
+				JSONOutput:      true,
+				ForceArray:      false,
+				ExecLocally:     conf.IsConnectionTypeLocal(),
+				PassCredentials: conf.IsPassCredentialsEnabled(),
+				Username:        conf.Settings.WinRMUsername,
+				Password:        conf.Settings.WinRMPassword,
+				Server:          conf.IdentifyDomainController(),
+			}
+			psCmd := NewPSCommand([]string{cmd}, psOpts)
+			result, err := psCmd.Run(conf)
+			if err != nil {
+				return err
+			}
+			if result.ExitCode != 0 {
+				log.Printf("[DEBUG] stderr: %s\nstdout: %s", result.StdErr, result.Stdout)
+				return fmt.Errorf("command Rename-ADObject exited with a non-zero exit code %d, stderr: %s", result.ExitCode, result.StdErr)
+			}
 		}
-		psCmd := NewPSCommand([]string{cmd}, psOpts)
-		result, err := psCmd.Run(conf)
-		if err != nil {
-			return err
-		}
-		if result.ExitCode != 0 {
-			log.Printf("[DEBUG] stderr: %s\nstdout: %s", result.StdErr, result.Stdout)
-			return fmt.Errorf("command Rename-ADObject exited with a non-zero exit code %d, stderr: %s", result.ExitCode, result.StdErr)
-		}
-	}
 
-	if d.HasChange("container") {
-		cmd := fmt.Sprintf("Move-ADObject -Identity %q -TargetPath %q", g.GUID, d.Get("container").(string))
-		psOpts := CreatePSCommandOpts{
-			JSONOutput:      true,
-			ForceArray:      false,
-			ExecLocally:     conf.IsConnectionTypeLocal(),
-			PassCredentials: conf.IsPassCredentialsEnabled(),
-			Username:        conf.Settings.WinRMUsername,
-			Password:        conf.Settings.WinRMPassword,
-			Server:          conf.IdentifyDomainController(),
+		if d.HasChange("container") {
+			cmd := fmt.Sprintf("Move-ADObject -Identity %q -TargetPath %q", g.GUID, d.Get("container").(string))
+			psOpts := CreatePSCommandOpts{
+				JSONOutput:      true,
+				ForceArray:      false,
+				ExecLocally:     conf.IsConnectionTypeLocal(),
+				PassCredentials: conf.IsPassCredentialsEnabled(),
+				Username:        conf.Settings.WinRMUsername,
+				Password:        conf.Settings.WinRMPassword,
+				Server:          conf.IdentifyDomainController(),
+			}
+			psCmd := NewPSCommand([]string{cmd}, psOpts)
+			result, err := psCmd.Run(conf)
+			if err != nil {
+				return fmt.Errorf("winrm execution failure while moving group object: %s", err)
+			}
+			if result.ExitCode != 0 {
+				return fmt.Errorf("Move-ADObject exited with a non zero exit code (%d), stderr: %s", result.ExitCode, result.StdErr)
+			}
 		}
-		psCmd := NewPSCommand([]string{cmd}, psOpts)
-		result, err := psCmd.Run(conf)
-		if err != nil {
-			return fmt.Errorf("winrm execution failure while moving group object: %s", err)
-		}
-		if result.ExitCode != 0 {
-			return fmt.Errorf("Move-ADObject exited with a non zero exit code (%d), stderr: %s", result.ExitCode, result.StdErr)
-		}
-	}
 
-*/
+	*/
 	return nil
 }
 

@@ -13,20 +13,20 @@ import (
 
 // DHCP Reservation
 type DHCPReservation struct {
-	ClientID           string   `json:"ClientId"`
-	ClientType         string   `json:"ClientType,ommitempty"`
-	Description        string   `json:"Description,ommitempty"`
-	HostName           string   `json:"HostName,ommitempty"`
-	IPAddress          struct {
-		IPAddress  string   `json:"IPAddressToString"`
-	}                           `json:"IPAddress"`
-	IPv4Address        string
-	Name               string   `json:"Name,ommitempty"`
-	Scope              struct {
-		IPAddress  string   `json:"IPAddressToString"`
-	}                           `json:"ScopeId"`
-	ScopeID            string
-	Type               string   `json:"Type,ommitempty"`
+	ClientID    string `json:"ClientId"`
+	ClientType  string `json:"ClientType,ommitempty"`
+	Description string `json:"Description,ommitempty"`
+	HostName    string `json:"HostName,ommitempty"`
+	IPAddress   struct {
+		IPAddress string `json:"IPAddressToString"`
+	} `json:"IPAddress"`
+	IPv4Address string
+	Name        string `json:"Name,ommitempty"`
+	Scope       struct {
+		IPAddress string `json:"IPAddressToString"`
+	} `json:"ScopeId"`
+	ScopeID string
+	Type    string `json:"Type,ommitempty"`
 }
 
 // AddDHCPReservation creates a new DHCP Reservation
@@ -66,93 +66,93 @@ func (r *DHCPReservation) AddDHCPReservation(conf *config.ProviderConf) (string,
 
 // ModifyDHCPReservation updates an existing DHCP Reservation
 func (r *DHCPReservation) ModifyDHCPReservation(d *schema.ResourceData, conf *config.ProviderConf) error {
-/*
-	KeyMap := map[string]string{
-		"sam_account_name": "SamAccountName",
-		"scope":            "GroupScope",
-		"category":         "GroupCategory",
-		"description":      "Description",
-	}
+	/*
+		KeyMap := map[string]string{
+			"sam_account_name": "SamAccountName",
+			"scope":            "GroupScope",
+			"category":         "GroupCategory",
+			"description":      "Description",
+		}
 
-	cmds := []string{fmt.Sprintf("Set-ADGroup -Identity %q", g.GUID)}
+		cmds := []string{fmt.Sprintf("Set-ADGroup -Identity %q", g.GUID)}
 
-	for k, param := range KeyMap {
-		if d.HasChange(k) {
-			value := SanitiseTFInput(d, k)
-			if value == "" {
-				value = "$null"
-			} else {
-				value = fmt.Sprintf(`"%s"`, value)
+		for k, param := range KeyMap {
+			if d.HasChange(k) {
+				value := SanitiseTFInput(d, k)
+				if value == "" {
+					value = "$null"
+				} else {
+					value = fmt.Sprintf(`"%s"`, value)
+				}
+				cmds = append(cmds, fmt.Sprintf(`-%s %s`, param, value))
 			}
-			cmds = append(cmds, fmt.Sprintf(`-%s %s`, param, value))
 		}
-	}
 
-	if len(cmds) > 1 {
-		psOpts := CreatePSCommandOpts{
-			JSONOutput:      true,
-			ForceArray:      false,
-			ExecLocally:     conf.IsConnectionTypeLocal(),
-			PassCredentials: conf.IsPassCredentialsEnabled(),
-			Username:        conf.Settings.WinRMUsername,
-			Password:        conf.Settings.WinRMPassword,
-			Server:          conf.IdentifyDomainController(),
+		if len(cmds) > 1 {
+			psOpts := CreatePSCommandOpts{
+				JSONOutput:      true,
+				ForceArray:      false,
+				ExecLocally:     conf.IsConnectionTypeLocal(),
+				PassCredentials: conf.IsPassCredentialsEnabled(),
+				Username:        conf.Settings.WinRMUsername,
+				Password:        conf.Settings.WinRMPassword,
+				Server:          conf.IdentifyDomainController(),
+			}
+			psCmd := NewPSCommand(cmds, psOpts)
+			result, err := psCmd.Run(conf)
+			if err != nil {
+				return err
+			}
+			if result.ExitCode != 0 {
+				log.Printf("[DEBUG] stderr: %s\nstdout: %s", result.StdErr, result.Stdout)
+				return fmt.Errorf("command Set-ADGroup exited with a non-zero exit code %d, stderr: %s", result.ExitCode, result.StdErr)
+			}
 		}
-		psCmd := NewPSCommand(cmds, psOpts)
-		result, err := psCmd.Run(conf)
-		if err != nil {
-			return err
-		}
-		if result.ExitCode != 0 {
-			log.Printf("[DEBUG] stderr: %s\nstdout: %s", result.StdErr, result.Stdout)
-			return fmt.Errorf("command Set-ADGroup exited with a non-zero exit code %d, stderr: %s", result.ExitCode, result.StdErr)
-		}
-	}
 
-	if d.HasChange("name") {
-		cmd := fmt.Sprintf("Rename-ADObject -Identity %q -NewName %q", g.GUID, d.Get("name").(string))
-		psOpts := CreatePSCommandOpts{
-			JSONOutput:      true,
-			ForceArray:      false,
-			ExecLocally:     conf.IsConnectionTypeLocal(),
-			PassCredentials: conf.IsPassCredentialsEnabled(),
-			Username:        conf.Settings.WinRMUsername,
-			Password:        conf.Settings.WinRMPassword,
-			Server:          conf.IdentifyDomainController(),
+		if d.HasChange("name") {
+			cmd := fmt.Sprintf("Rename-ADObject -Identity %q -NewName %q", g.GUID, d.Get("name").(string))
+			psOpts := CreatePSCommandOpts{
+				JSONOutput:      true,
+				ForceArray:      false,
+				ExecLocally:     conf.IsConnectionTypeLocal(),
+				PassCredentials: conf.IsPassCredentialsEnabled(),
+				Username:        conf.Settings.WinRMUsername,
+				Password:        conf.Settings.WinRMPassword,
+				Server:          conf.IdentifyDomainController(),
+			}
+			psCmd := NewPSCommand([]string{cmd}, psOpts)
+			result, err := psCmd.Run(conf)
+			if err != nil {
+				return err
+			}
+			if result.ExitCode != 0 {
+				log.Printf("[DEBUG] stderr: %s\nstdout: %s", result.StdErr, result.Stdout)
+				return fmt.Errorf("command Rename-ADObject exited with a non-zero exit code %d, stderr: %s", result.ExitCode, result.StdErr)
+			}
 		}
-		psCmd := NewPSCommand([]string{cmd}, psOpts)
-		result, err := psCmd.Run(conf)
-		if err != nil {
-			return err
-		}
-		if result.ExitCode != 0 {
-			log.Printf("[DEBUG] stderr: %s\nstdout: %s", result.StdErr, result.Stdout)
-			return fmt.Errorf("command Rename-ADObject exited with a non-zero exit code %d, stderr: %s", result.ExitCode, result.StdErr)
-		}
-	}
 
-	if d.HasChange("container") {
-		cmd := fmt.Sprintf("Move-ADObject -Identity %q -TargetPath %q", g.GUID, d.Get("container").(string))
-		psOpts := CreatePSCommandOpts{
-			JSONOutput:      true,
-			ForceArray:      false,
-			ExecLocally:     conf.IsConnectionTypeLocal(),
-			PassCredentials: conf.IsPassCredentialsEnabled(),
-			Username:        conf.Settings.WinRMUsername,
-			Password:        conf.Settings.WinRMPassword,
-			Server:          conf.IdentifyDomainController(),
+		if d.HasChange("container") {
+			cmd := fmt.Sprintf("Move-ADObject -Identity %q -TargetPath %q", g.GUID, d.Get("container").(string))
+			psOpts := CreatePSCommandOpts{
+				JSONOutput:      true,
+				ForceArray:      false,
+				ExecLocally:     conf.IsConnectionTypeLocal(),
+				PassCredentials: conf.IsPassCredentialsEnabled(),
+				Username:        conf.Settings.WinRMUsername,
+				Password:        conf.Settings.WinRMPassword,
+				Server:          conf.IdentifyDomainController(),
+			}
+			psCmd := NewPSCommand([]string{cmd}, psOpts)
+			result, err := psCmd.Run(conf)
+			if err != nil {
+				return fmt.Errorf("winrm execution failure while moving group object: %s", err)
+			}
+			if result.ExitCode != 0 {
+				return fmt.Errorf("Move-ADObject exited with a non zero exit code (%d), stderr: %s", result.ExitCode, result.StdErr)
+			}
 		}
-		psCmd := NewPSCommand([]string{cmd}, psOpts)
-		result, err := psCmd.Run(conf)
-		if err != nil {
-			return fmt.Errorf("winrm execution failure while moving group object: %s", err)
-		}
-		if result.ExitCode != 0 {
-			return fmt.Errorf("Move-ADObject exited with a non zero exit code (%d), stderr: %s", result.ExitCode, result.StdErr)
-		}
-	}
 
-*/
+	*/
 	return nil
 }
 
@@ -185,12 +185,12 @@ func (r *DHCPReservation) DeleteDHCPReservation(conf *config.ProviderConf) error
 // GetDHCPReservationFromResource returns a DHCP Reservation struct built from Resource data
 func GetDHCPReservationFromResource(d *schema.ResourceData) *DHCPReservation {
 	r := DHCPReservation{
-		ClientID:          SanitiseTFInput(d, "client_id"),
-		Description:       SanitiseTFInput(d, "description"),
-		IPv4Address:       SanitiseTFInput(d, "ipv4_address"),
-		Name:              SanitiseTFInput(d, "name"),
-		ScopeID:           SanitiseTFInput(d, "scope_id"),
-		Type:              SanitiseTFInput(d, "type"),
+		ClientID:    SanitiseTFInput(d, "client_id"),
+		Description: SanitiseTFInput(d, "description"),
+		IPv4Address: SanitiseTFInput(d, "ipv4_address"),
+		Name:        SanitiseTFInput(d, "name"),
+		ScopeID:     SanitiseTFInput(d, "scope_id"),
+		Type:        SanitiseTFInput(d, "type"),
 	}
 
 	return &r
@@ -232,34 +232,34 @@ func GetDHCPReservationFromHost(conf *config.ProviderConf, id string) (*DHCPRese
 // GetDHCPLeaseFromHost returns a DHCP Lease struct based on data
 // retrieved from the DHCP Server.
 func GetDHCPLeaseFromHost(conf *config.ProviderConf, id string) (*DHCPReservation, error) {
-        cmd := fmt.Sprintf("Get-DhcpServerv4Lease -IPAddress %q", id)
-        psOpts := CreatePSCommandOpts{
-                JSONOutput:      true,
-                ForceArray:      false,
-                ExecLocally:     conf.IsConnectionTypeLocal(),
-                PassCredentials: conf.IsPassCredentialsEnabled(),
-                Username:        conf.Settings.WinRMUsername,
-                Password:        conf.Settings.WinRMPassword,
-                Server:          conf.IdentifyDomainController(),
-        }
-        psCmd := NewPSCommand([]string{cmd}, psOpts)
-        result, err := psCmd.Run(conf)
+	cmd := fmt.Sprintf("Get-DhcpServerv4Lease -IPAddress %q", id)
+	psOpts := CreatePSCommandOpts{
+		JSONOutput:      true,
+		ForceArray:      false,
+		ExecLocally:     conf.IsConnectionTypeLocal(),
+		PassCredentials: conf.IsPassCredentialsEnabled(),
+		Username:        conf.Settings.WinRMUsername,
+		Password:        conf.Settings.WinRMPassword,
+		Server:          conf.IdentifyDomainController(),
+	}
+	psCmd := NewPSCommand([]string{cmd}, psOpts)
+	result, err := psCmd.Run(conf)
 
-        if err != nil {
-                return nil, err
-        }
+	if err != nil {
+		return nil, err
+	}
 
-        if result.ExitCode != 0 {
-                log.Printf("[DEBUG] stderr: %s\nstdout: %s", result.StdErr, result.Stdout)
-                return nil, fmt.Errorf("command Get-DhcpServerv4Lease exited with a non-zero exit code %d, stderr: %s", result.ExitCode, result.StdErr)
-        }
+	if result.ExitCode != 0 {
+		log.Printf("[DEBUG] stderr: %s\nstdout: %s", result.StdErr, result.Stdout)
+		return nil, fmt.Errorf("command Get-DhcpServerv4Lease exited with a non-zero exit code %d, stderr: %s", result.ExitCode, result.StdErr)
+	}
 
-        r, err := unmarshallDHCPReservation([]byte(result.Stdout))
-        if err != nil {
-                return nil, fmt.Errorf("error while unmarshalling dhcp lease json document: %s", err)
-        }
+	r, err := unmarshallDHCPReservation([]byte(result.Stdout))
+	if err != nil {
+		return nil, fmt.Errorf("error while unmarshalling dhcp lease json document: %s", err)
+	}
 
-        return r, nil
+	return r, nil
 }
 
 // unmarshallDHCPReservation unmarshalls the incoming byte array containing JSON

@@ -28,9 +28,9 @@ func resourceDNSRecord() *schema.Resource {
 				Description: "The distinguished name of the DNS record object.",
 			},
 			"ipv4_address": {
-				Type:        schema.TypeString,
-				Required:    true,
-				Description: "The IPv4 address.",
+				Type:         schema.TypeString,
+				Required:     true,
+				Description:  "The IPv4 address.",
 				ValidateFunc: validation.IsIPv4Address,
 			},
 			"name": {
